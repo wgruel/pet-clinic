@@ -3,7 +3,7 @@ on: [ push ]
 env:
 #### An dieser Stelle müssen eure persönlichen Umgebungsvariablen eingetragen werden
   # Tip: Die Token/der API-Key werden als Secrets in den Repository-Settings eingetragen und hier referenziert.
-  APP_NAME: "" #<-- hier wird der Name euer Heroku-App eingetragen
+  APP_NAME: "pet-clinic-wg" #<-- hier wird der Name euer Heroku-App eingetragen
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }} 
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -41,12 +41,14 @@ jobs:
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=wgruel_pet-clinic
       
   
-    - name: Compile, build and push
-      run: |
-        #### AUFGABE 3 DOCKER BUILD UND PUSH
-          # an dieser Stelle wird die Aufgabe 3 bearbeitet: heroku login, docker build, docker push
-        
-    - name: Release
-      run: |
-        #### AUFGABE 4 DEPLOYMENT AUF HEROKU
-          # hier wird die 4. Aufgabe bearbeitet: Release der App auf Heroku
+      - name: Compile, build and push
+        run: |
+          heroku container:login 
+          mvn package
+          docker build --tag registry.heroku.com/${APP_NAME}/web -f Dockerfile .
+          docker push registry.heroku.com/${APP_NAME}/web
+      - name: Release
+        run: |
+          heroku container:login 
+          heroku stack:set container --app ${APP_NAME}
+          heroku container:release web --app ${APP_NAME}
